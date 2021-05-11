@@ -1,0 +1,7 @@
+1- Generate a data set, crowling de pagines web o twitter.
+2- Varios processos que capturen informacion de web/textual i la guarden en el webstorage.
+3- Generar datos estructurados a partir del data set (Analizar a lo tablas por columnas).
+
+
+scrapy per web
+tweety per tweets
