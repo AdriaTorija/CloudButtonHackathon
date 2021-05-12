@@ -1,6 +1,6 @@
 lithops: 
     #storage: ibm_cos
-    #storage_bucket: <BUCKET_NAME>
+    storage_bucket: cloudbuttonhackathon
     #mode: serverless
     #monitoring: storage
     #data_cleaner: <True/False>
@@ -14,8 +14,8 @@ lithops:
     #log_stream: ext://sys.stdout
     #log_filename <path_to_a_file>
     
-#serverless:
-    #backend: ibm_cf
+serverless:
+    backend: ibm_cf
     #runtime : <RUNTIME_NAME>
     #runtime_timeout: 600
     #runtime_memory: 256
@@ -31,13 +31,15 @@ lithops:
     #soft_dismantle_timeout: 300
 
 #ibm:
-    #iam_api_key: <IAM KEY>
+    #iam_api_key: nzxTjxgDS5WmC3jASIdr9Zm47y1XEWygQ7_sPSxebEen
 
-#ibm_cf:
-    #endpoint    : <REGION_ENDPOINT>
-    #namespace   : <NAMESPACE>
-    #api_key     : <API_KEY>
-    #namespace_id : <NAMESPACE_ID> # Only for IAM auth
+ibm_cf:
+    endpoint : https://us-south.functions.cloud.ibm.com
+    namespace :  adria.torija@estudiants.urv.cat_dev
+    api_key :  f393acf5-06b9-41f2-bfc1-5b7c956983a6:HH9XJCCQLNuDIq1cYDCf3pE6ggxrEf18N3Ik4i9NMn9r0curex7iO6N3A1ioBeo0 
+    #namespace_id : 85e70827-423e-4c41-a028-012f58acc5fc
+
+
     #runtime: <RUNTIME_NAME>
 
 #code_engine:
@@ -45,12 +47,12 @@ lithops:
     #runtime: <RUNTIME_NAME>
 
 ibm_cos:
-    region : <REGION>
-    endpoint    : <REGION_ENDPOINT>
-    private_endpoint: <PRIVATE_REGION_ENDPOINT>
-    api_key     : <API_KEY>
-    access_key : <ACCESS_KEY>  # Optional
-    secret_key : <SECRET_KEY>  # Optional
+    region: us-south
+    #endpoint: s3.us-south.cloud-object-storage.appdomain.cloud
+    #private_endpoint: s3.private.us-south.cloud-object-storage.appdomain.cloud
+    #api_key : f393acf5-06b9-41f2-bfc1-5b7c956983a6:HH9XJCCQLNuDIq1cYDCf3pE6ggxrEf18N3Ik4i9NMn9r0curex7iO6N3A1ioBeo0
+    access_key : ce7932292fe0453ab05ec7f04ea3549d
+    secret_key : 189969d03877a39f4ce7829142711ec191ef6c2fe116522d
 
 #ibm_vpc:
     #endpoint    : <REGION_ENDPOINT> # https://eu-de.iaas.cloud.ibm.com
