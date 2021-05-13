@@ -2,7 +2,7 @@ import io
 import tweepy
 import pandas as pd
 from lithops import Storage
-
+import json
 
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
 
@@ -24,6 +24,7 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
 
 
     #information we want to substract:
+    dict = {}
     tweets = []
     likes = []
     time = []
@@ -49,13 +50,22 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
 
     #Storing Information
     storage = Storage()
-    string=str(hashtags)
-    storage.put_object(bucket,"hashtags.txt",string)
+    #x=json.dumps(tweets)
+    #x+=json.dumps(likes)
+    #x+=json.dumps(time)
+    #x+=json.dumps(hashtags)
+    dict={
+        "tweets":tweets,
+        "likes":likes,
+    }
+  
+    storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
+    #storage.put_object(bucket,"text.txt",str(tweets))
     
 
 
 def main():
-    dataSearch("keys.txt","Covid19",5)
+    dataSearch("keys.txt","Covid19",4)
     print("gg")
 
 if __name__ == "__main__":

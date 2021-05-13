@@ -8,13 +8,7 @@ bucket='cloudbuttonhackathon'                  #Change this value if you want to
 
 class TestSpider(scrapy.Spider):
   name = "test" 
-  start_urls = [
-    'https://www.reddit.com/r/COVID19/',
-    'https://www.reddit.com/r/PandemicPreps/',
-    'https://www.reddit.com/r/COVID19positive/',
-    'https://www.reddit.com/r/COVID19_data/'
 
-  ]
 
   def parse(self, response):
     urls_all = []    # Used to collect all the links first.
@@ -45,11 +39,11 @@ class TestSpider(scrapy.Spider):
     storage = Storage()
     storage.put_object(bucket,filename,response.body)
 
-process = CrawlerProcess(settings={
-    "FEEDS": {
-        "items.json": {"format": "json"},
-    },
-})
+process = CrawlerProcess()
 
-process.crawl(TestSpider)
-process.start() # the script will block here until the crawling is finished
+
+def getWebsHtml(link):
+    #TestSpider.start_urls=['https://www.reddit.com/r/COVID19/']     #Example
+    TestSpider.start_urls=[link]
+    process.crawl(TestSpider)
+    process.start() # the script will block here until the crawling is finished
