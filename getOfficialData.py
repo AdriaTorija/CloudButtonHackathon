@@ -22,6 +22,7 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
     auth.set_access_token(access_token,access_token_secret)
     api=tweepy.API(auth)
 
+
     #information we want to substract:
     tweets = []
     likes = []
@@ -49,7 +50,7 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
     #Storing Information
     storage = Storage()
     string=str(hashtags)
-    storage.put_object(bucket,"hashtags",string)
+    storage.put_object(bucket,"hashtags.txt",string)
     
 
 
