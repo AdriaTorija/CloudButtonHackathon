@@ -3,8 +3,9 @@ bucket='cloudbuttonhackathon'
 storage = Storage()
 from bs4 import BeautifulSoup
 
-def getText(key):
-    soup = BeautifulSoup(storage.get_object(bucket,a))
+def getText(htmlfile):
+    #soup = BeautifulSoup(storage.get_object(bucket,a))     #Per agafar els html
+    soup=BeautifulSoup(htmlfile)
     # kill all script and style elements
     for script in soup(["script", "style"]):
         script.extract()    # rip it out
@@ -16,10 +17,10 @@ def getText(key):
     chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
     # drop blank lines
     text = '\n'.join(chunk for chunk in chunks if chunk)
-    print(text)
+    #print(text)
+    return text
 
-
-keys=storage.list_keys(bucket)
-for a in keys:
-    getText(a)
+#keys=storage.list_keys(bucket)
+#for a in keys:
+#  getText(a)
 

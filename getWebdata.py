@@ -1,9 +1,9 @@
 import scrapy
 from scrapy.crawler import CrawlerProcess
 from scrapy.linkextractors import LinkExtractor
-from scrapy import Selector
+import json
 from lithops import Storage
-
+from analyseHtml import getText
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
 
 class TestSpider(scrapy.Spider):
@@ -37,7 +37,8 @@ class TestSpider(scrapy.Spider):
     #with open(filename, 'wb') as f:
     #   f.write(response.body)
     storage = Storage()
-    storage.put_object(bucket,filename,response.body)
+    print(filename)
+    storage.put_object(bucket,filename,getText(response.body))
 
 process = CrawlerProcess()
 
@@ -47,3 +48,23 @@ def getWebsHtml(link):
     TestSpider.start_urls=[link]
     process.crawl(TestSpider)
     process.start() # the script will block here until the crawling is finished
+    storage = Storage()
+    list=storage.list_keys(bucket)
+    filenames=[]
+    texts=[]
+    for a in list:
+      filenames.append(a)
+      text=storage.get_object(bucket,a)
+      texts.append(str(text))
+    dict={
+      "filenames":filenames,
+      "texts":texts,
+        }
+
+    list=storage.list_keys('cloudbuttonhackathon')
+    storage.delete_objects('cloudbuttonhackathon',list)
+
+    storage.put_object(bucket,"dataWEB.json",json.dumps(dict))
+
+
+
