@@ -19,14 +19,15 @@ items = []
 filenames=[]
 texts=[]
 votes=[]
+dates=[]
 
 class TestSpider(scrapy.Spider):
   name = "test" 
 
-  allowed_domains = ['reddit.com'  ]
+  allowed_domains = ['reddit.com']
 
   # The URLs to start with
-  start_urls = ['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
+  start_urls = ['https://www.reddit.com/r/COVID19/']  
   # This spider has one rule: extract all (unique and canonicalized) links, follow them and parse them using the parse_items method
   rules = [
       Rule(
@@ -82,6 +83,8 @@ class TestSpider(scrapy.Spider):
           from_text = response.meta['text']
       if 'depth' in response.meta:
           depth = response.meta['depth']
+          
+      date = response.css('._3jOxDPIQ0KaOWpzvSQo-1s::text').extract() 
       titles = response.css('._eYtD2XCVieq6emjKBH3m::text').extract()       
       vot = response.css('._1rZYMD_4xY3gRcSS3p8ODO::text').extract()
       comments = response.css('.FHCV02u6Cp2zYL0fhQPsO::text').extract()
@@ -89,9 +92,10 @@ class TestSpider(scrapy.Spider):
       filenames.append(titles)
       texts.append(comments)
       votes.append(vot)
+      dates.append(date)
       # Update the print logic to show what page contain a link to the
       # current page, and what was the text of the link
-      print(depth, response.url, '<-', from_url, from_text, sep=' ')
+      #print(depth, response.url, '<-', from_url, from_text, sep=' ')
       # Browse a tags only if maximum depth has not be reached
       if depth < self.maxdepth:
           a_selectors = response.xpath("//a")
@@ -126,7 +130,7 @@ class TestSpider(scrapy.Spider):
 
 process = CrawlerProcess()
 
-if __name__ == '__main__':
+def getWebsHtml():
     process = CrawlerProcess()
     process.crawl(TestSpider)
     process.start()
@@ -158,7 +162,8 @@ if __name__ == '__main__':
         "filenames":linksss,
         "Titulos":filenames, 
         "comments":texts,
-        "votes": votes
+        "votes": votes,
+        "dates": dates
         }
 
     list=storage.list_keys(bucket)
