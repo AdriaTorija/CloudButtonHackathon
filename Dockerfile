@@ -12,6 +12,11 @@ RUN apt-get update \
         zip \
         unzip \
         make \
+        scrapy \
+        pandas \
+        lithops \
+        bs4 \
+        tweepy \
     # cleanup package lists, they are not used anymore in this image
     && rm -rf /var/lib/apt/lists/* \
     && apt-cache search linux-headers-generic
