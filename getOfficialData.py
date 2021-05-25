@@ -42,24 +42,25 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
     for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended").items(number_of_tweets):
         tweets.append(i.full_text)
         likes.append(i.favorite_count)
-        time.append(i.created_at)
+        time.append(str(i.created_at))
+        print(i.created_at)
         for j in i.entities["hashtags"]:
             hashtags.append(j["text"])
-        #names.append(i.entities["user_mentions"][0]['screen_name'])
-        urls.append(i.entities["urls"])
+        urls.append(str(i.entities["urls"]))
 
     #Storing Information
     storage = Storage()
-    #x=json.dumps(tweets)
-    #x+=json.dumps(likes)
-    #x+=json.dumps(time)
-    #x+=json.dumps(hashtags)
     dict={
         "tweets":tweets,
         "likes":likes,
+        "time":time,
+        "urls":urls,
+        "hashtags":hashtags,
     }
-  
-    storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
+    with open("proves.json", 'w') as f:
+       f.write(json.dumps(dict))
+    print(dict)
+    #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
     #storage.put_object(bucket,"text.txt",str(tweets))
     
 

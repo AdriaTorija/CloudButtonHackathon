@@ -11,13 +11,10 @@ web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positi
 
 bucket='cloudbuttonhackathon'
 storage=Storage()
-#for i in storage.list_keys(bucket):
-#    storage.delete_object(bucket,i)
-data=[]
-#for i in web:
-fexec.call_async(getWebsHtml, data)
+with Pool() as pool:
+    pool.map(getWebsHtml, webs)
+  
 
-
-pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
-pdOBJ.to_csv('data.csv', index=False)
+#pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
+#pdOBJ.to_csv('data.csv', index=False)
 

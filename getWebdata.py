@@ -127,14 +127,17 @@ class TestSpider(scrapy.Spider):
     storage = Storage()
     print(filename)
     storage.put_object(bucket,filename,getText(response.body)) """
-
 process = CrawlerProcess()
+web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
 
 def getWebsHtml():
     process = CrawlerProcess()
+    
+    #TestSpider.start_urls=webs
     process.crawl(TestSpider)
+    
     process.start()
-
+    
     storage=Storage()
     list=storage.list_keys(bucket)
     
@@ -165,21 +168,24 @@ def getWebsHtml():
         "votes": votes,
         "dates": dates
         }
-
+    #print(dict)
+    #print('\n\n\n\n\n')
     list=storage.list_keys(bucket)
-    storage.delete_objects('cloudbuttonhackathon',list)
+    #storage.delete_objects('cloudbuttonhackathon',list)
 
     storage.put_object(bucket,"dataWEB.json",json.dumps(dict))
 
-    pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
-    pdOBJ.to_csv('data.csv', index=False)
+    #pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
+    #pdOBJ.to_csv('data.csv', index=False)
 """ def getWebsHtml():
     #TestSpider.start_urls=['https://www.reddit.com/r/COVID19/']     #Example
     process = CrawlerProcess()
     process.crawl(TestSpider)
     process.start() # the script will block here until the crawling is finished """
 
-    
+ 
+
+
 
       
 

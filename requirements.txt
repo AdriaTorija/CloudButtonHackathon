@@ -1,0 +1,6 @@
+tweepy
+lithops
+pandas
+scrapy
+json
+bs4
