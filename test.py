@@ -18,6 +18,6 @@ data=[]
 fexec.call_async(getWebsHtml, data)
 
 
-pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
-pdOBJ.to_csv('data.csv', index=False)
+#pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
+#pdOBJ.to_csv('data.csv', index=False)
 

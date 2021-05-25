@@ -1,3 +1,4 @@
+from pickle import FALSE
 import scrapy
 from scrapy import linkextractors
 from scrapy.crawler import CrawlerProcess
@@ -7,6 +8,7 @@ from scrapy.spiders import Rule, CrawlSpider
 import json
 import pandas as pd
 from lithops import Storage
+from twisted.python.log import NullFile
 from analyseHtml import getText
 import os
 
@@ -83,16 +85,35 @@ class TestSpider(scrapy.Spider):
           from_text = response.meta['text']
       if 'depth' in response.meta:
           depth = response.meta['depth']
-          
-      date = response.css('._3jOxDPIQ0KaOWpzvSQo-1s::text').extract() 
-      titles = response.css('._eYtD2XCVieq6emjKBH3m::text').extract()       
-      vot = response.css('._1rZYMD_4xY3gRcSS3p8ODO::text').extract()
-      comments = response.css('.FHCV02u6Cp2zYL0fhQPsO::text').extract()
-      linksss.append(response.url)
-      filenames.append(titles)
-      texts.append(comments)
-      votes.append(vot)
-      dates.append(date)
+      
+      
+      aux=response.url.split('/')
+      tema=''
+      covid=False
+      for i in aux:
+            if i == 'COVID19':
+                covid=True
+            if i == 'comments' and covid == True:
+                tema = 'comments'
+      if tema == 'comments':
+            auxx=False
+            titulo = response.css('._eYtD2XCVieq6emjKBH3m::text').extract()
+            titles = titulo[0]
+            for i in filenames:
+                if i == titles:
+                    auxx=True
+            if auxx==False:
+                date = response.css('._3jOxDPIQ0KaOWpzvSQo-1s::text').extract()
+                vot = response.css('._1rZYMD_4xY3gRcSS3p8ODO::text').extract()
+                comments = response.css('.FHCV02u6Cp2zYL0fhQPsO::text').extract()
+                linksss.append(aux[7])
+                filenames.append(titles)
+                comment=comments[0].split(' ')[0]
+                texts.append(comment)
+                if vot[0] == "Vote":
+                        vot[0]="0"
+                votes.append(vot[0])
+                dates.append(date[0])
       # Update the print logic to show what page contain a link to the
       # current page, and what was the text of the link
       #print(depth, response.url, '<-', from_url, from_text, sep=' ')
@@ -130,7 +151,7 @@ class TestSpider(scrapy.Spider):
 
 process = CrawlerProcess()
 
-def getWebsHtml():
+if __name__ == '__main__':
     process = CrawlerProcess()
     process.crawl(TestSpider)
     process.start()
