@@ -44,40 +44,44 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
         tweets.append(i.full_text)
         likes.append(i.favorite_count)
         time.append(str(i.created_at))
+
+        aux = ""
         for j in i.entities["hashtags"]:
-            hashtags.append(j["text"])
+            aux = aux + j["text"] + ","
+        hashtags.append(aux)
         urls.append(f"https://twitter.com/user/status/{i.id}")
         geo.append(i.geo)
         names.append(i.user.screen_name)
         verified.append(i.user.verified)
-        if i.user.verified :
-            totalVerifiedUsers += 1
         retweets.append(i.retweet_count)
         
     #Storing Information
     storage = Storage()
     dict={
-        "name":names,
-        "likes":likes,
-        "retweets":retweets,
-        "time":time,
-        "urls":urls,
-        "geo":geo,
-        "tweets":tweets,
-        "hashtags":hashtags,
-        "verified":verified,
-        "TotalverifiedUsers":totalVerifiedUsers,
+        "User":names,
+        "Likes":likes,
+        "Retweets":retweets,
+        "Date":time,
+        "Url":urls,
+        "Location":geo,
+        "Text":tweets,
+        "Hashtags":hashtags,
+        "Verified":verified,
     }
     with open("proves.json", 'w') as f:
        f.write(json.dumps(dict))
-    
+
+    #inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Location', 'Text', 'Hashtags', 'Verified'])
+    #inf.to_csv('prova.csv')
+
     #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
     #storage.put_object(bucket,"text.txt",str(tweets))
+    storage.put_object(bucket, "prova.csv", io.StringIO(dict))
     
 
 
 def main():
-    dataSearch("keys.txt","Covid19",250)
+    dataSearch("keys.txt","Covid19",10)
 
 if __name__ == "__main__":
     main()
