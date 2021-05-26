@@ -71,12 +71,11 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
     with open("proves.json", 'w') as f:
        f.write(json.dumps(dict))
 
-    #inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Location', 'Text', 'Hashtags', 'Verified'])
-    #inf.to_csv('prova.csv')
+    inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Location', 'Text', 'Hashtags', 'Verified'])
+    storage.put_object(bucket, "prova.csv", inf.to_csv(index=False))
 
     #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
     #storage.put_object(bucket,"text.txt",str(tweets))
-    storage.put_object(bucket, "prova.csv", io.StringIO(dict))
     
 
 
