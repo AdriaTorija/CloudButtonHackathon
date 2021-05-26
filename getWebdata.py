@@ -29,7 +29,7 @@ class TestSpider(scrapy.Spider):
   allowed_domains = ['reddit.com']
 
   # The URLs to start with
-  start_urls = ['https://www.reddit.com/r/COVID19/']  
+  #start_urls = ['https://www.reddit.com/r/COVID19/']  
   # This spider has one rule: extract all (unique and canonicalized) links, follow them and parse them using the parse_items method
   rules = [
       Rule(
@@ -153,14 +153,7 @@ web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positi
 
 def getWebsHtml(webs):
     process = CrawlerProcess()
-<<<<<<< HEAD
-    
-    #TestSpider.start_urls=webs
-=======
-    #TestSpider.start_urls=[webs]
->>>>>>> f71c03b6fce50982fdb793f55ad7af054a8ec7b3
-    process.crawl(TestSpider)
-    
+    TestSpider.start_urls=webs
     process.start()
     
     storage=Storage()

@@ -28,34 +28,47 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
     tweets = []
     likes = []
     time = []
-    retweets = []
     hashtags = []
     urls = []
-    text = []
-    user_mentions= []
     names = []
-
+    totalVerifiedUsers = 0
+    verified = []
+    geo = []
+    retweets = []
     #Substraction of information
     lang= " lang:en OR lang:ca"
-    stringSearch="#"+hashtag + lang
+
+    stringSearch="#"+hashtag + lang 
     print("Searching: "+stringSearch)
-    for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended").items(number_of_tweets):
+    #for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended",until="2021-05-22").items(number_of_tweets):
+    for i in tweepy.Cursor(api.search_30_day("CloudButton0",q=stringSearch,fromDate="2021-05-0",toDate="2021-05-12",maxResults=4)).items(number_of_tweets):
         tweets.append(i.full_text)
         likes.append(i.favorite_count)
         time.append(str(i.created_at))
         print(i.created_at)
         for j in i.entities["hashtags"]:
             hashtags.append(j["text"])
-        urls.append(str(i.entities["urls"]))
-
+        urls.append(f"https://twitter.com/user/status/{i.id}")
+        geo.append(i.geo)
+        names.append(i.user.screen_name)
+        verified.append(i.user.verified)
+        if i.user.verified :
+            totalVerifiedUsers += 1
+        retweets.append(i.retweet_count)
+        
     #Storing Information
     storage = Storage()
     dict={
-        "tweets":tweets,
+        "name":names,
         "likes":likes,
+        "retweets":retweets,
         "time":time,
         "urls":urls,
+        "geo":geo,
+        "tweets":tweets,
         "hashtags":hashtags,
+        "verified":verified,
+        "TotalverifiedUsers":totalVerifiedUsers,
     }
     with open("proves.json", 'w') as f:
        f.write(json.dumps(dict))

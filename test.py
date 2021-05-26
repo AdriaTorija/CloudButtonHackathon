@@ -12,7 +12,7 @@ web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positi
 bucket='cloudbuttonhackathon'
 storage=Storage()
 with Pool() as pool:
-    pool.map(getWebsHtml, webs)
+    pool.map(getWebsHtml,webs)
   
 
 #pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
