@@ -3,13 +3,20 @@ import tweepy
 import pandas as pd
 from lithops import Storage
 import json
-
+import csv
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
 
 
-def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: String of the file with keys
+
+def dataSearch(hashtag,number_of_tweets):                       #keys: String of the file with keys
     #Reading the keys for connection                #Hashtag: hashtag we want to search and save tweets without #
-    keys= open(keysText,'r').read().splitlines()
+    storage = Storage()
+    storage=Storage()
+    
+    f=storage.get_object(bucket,"keys.txt")
+
+    keys= f.decode('ascii').split('\n')
+   
     consumer_key=keys[0]
     consumer_secret=keys[1]
     access_token= keys[2]
@@ -56,7 +63,7 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
         retweets.append(i.retweet_count)
         
     #Storing Information
-    storage = Storage()
+    
     dict={
         "User":names,
         "Likes":likes,
@@ -68,19 +75,17 @@ def dataSearch(keysText,hashtag,number_of_tweets):                       #keys: 
         "Hashtags":hashtags,
         "Verified":verified,
     }
-    with open("proves.json", 'w') as f:
-       f.write(json.dumps(dict))
+    
 
     inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Location', 'Text', 'Hashtags', 'Verified'])
     storage.put_object(bucket, "prova.csv", inf.to_csv(index=False))
 
-    #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
-    #storage.put_object(bucket,"text.txt",str(tweets))
-    
 
+    #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
+    #storage.put_object(bucket,"text.txt",str(tweets)
 
 def main():
-    dataSearch("keys.txt","Covid19",10)
+    dataSearch("Covid19",10)
 
 if __name__ == "__main__":
     main()
