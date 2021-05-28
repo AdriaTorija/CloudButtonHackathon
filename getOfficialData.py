@@ -84,8 +84,3 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
     #storage.put_object(bucket,"text.txt",str(tweets)
 
-def main():
-    dataSearch("Covid19",10)
-
-if __name__ == "__main__":
-    main()

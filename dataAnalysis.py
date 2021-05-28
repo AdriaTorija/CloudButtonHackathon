@@ -71,14 +71,5 @@ def analysis():
     data=storage.get_object(bucket,"prova.csv")
     df = pd.read_csv(BytesIO(data))
     
-    
-   
-    
-
-    
- 
-def main():
-    analysis()
-    print("End of analysis")
-if __name__ == "__main__":
-    main()
+analysis()
+print("End of analysis")

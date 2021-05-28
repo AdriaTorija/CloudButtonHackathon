@@ -27,4 +27,8 @@ RUN mkdir -p /action \
 ADD https://raw.githubusercontent.com/apache/openwhisk-runtime-docker/8b2e205c39d84ed5ede6b1b08cccf314a2b13105/core/actionProxy/actionproxy.py /actionProxy/actionproxy.py
 ADD https://raw.githubusercontent.com/apache/openwhisk-runtime-python/3%401.0.3/core/pythonAction/pythonrunner.py /pythonAction/pythonrunner.py
 
+
+COPY . /src
+WORKDIR /src
+ENTRYPOINT ["python3", "-m", "vdp"]
 CMD ["/bin/bash", "-c", "cd /pythonAction && python -u pythonrunner.py"]
