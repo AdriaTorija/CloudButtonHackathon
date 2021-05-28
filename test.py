@@ -3,17 +3,15 @@ import pandas as pd
 from lithops import Storage
 import tweepy
 from lithops.multiprocessing import Pool
-import getOfficialData
+
 webs=['https://www.reddit.com/r/COVID19/']
 web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
 
 bucket='cloudbuttonhackathon'
 storage=Storage()
-  
-with Pool() as pool:
-    result=pool.starmap(getOfficialData.dataSearch,[("Covid19",10)])
-    
-    '''
+
+
+
 def dataSearch(hashtag,number_of_tweets):                       #keys: String of the file with keys
     #Reading the keys for connection                #Hashtag: hashtag we want to search and save tweets without #
     storage = Storage()
@@ -75,4 +73,6 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     }
     inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Location', 'Text', 'Hashtags', 'Verified'])
     storage.put_object(bucket, "prova.csv", inf.to_csv(index=False))
-'''
+
+with Pool() as pool:
+    result=pool.starmap(dataSearch,[("Covid19",10)])

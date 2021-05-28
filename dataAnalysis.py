@@ -1,23 +1,26 @@
 import pandas as pd
 import getOfficialData as getOData
 #df= pd.DataFrame({'tweets':tweets,'time':time,'likes':likes})
-import nltk
-import json
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from lithops import Storage
 from io import BytesIO
 from collections import Counter
+import matplotlib.pyplot as plt
+import nltk
+
+
 bucket='cloudbuttonhackathon'
 def mostCommonWords(df,n):
     splitText = []
-    print(df)
     for text in df["Text"]:
         for word in str(text).split():
             splitText.append(word)
         m = Counter(splitText).most_common(n)
-    return m
+    wDf= pd.DataFrame(m)
+    wDf.set_index(0)[1].plot(kind="pie",subplots=True)
 
 def feelings(df):
+    
     analyzer = SentimentIntensityAnalyzer()
     pos, neg, neu = 0, 0, 0
     positive, neutral, negative = [], [], []
@@ -38,11 +41,15 @@ def feelings(df):
                 negative.append(text)
   
     dict={
-        "Positives":positive,
-        "Neutrals":neutral,
-        "Negatives":negative,        
+        "Positives":pos,
+        "Neutrals":neu,
+        "Negatives":neg,        
     }
-    return dict
+    aux= pd.DataFrame.from_dict(dict,orient='index')
+    aux.transpose()
+    aux.plot(kind='bar',title="Feelings",subplots=True)
+    print(aux.describe())
+    
 
 def mostCommonHashtags(df,n):
     splitHash=[]
@@ -55,7 +62,7 @@ def mostCommonHashtags(df,n):
 
 def mostRetweeted(df,n):
     return max(df["Retweets"])
-
+    
 def verifiedTweet(df):
     i=0
     x=[]
@@ -70,6 +77,27 @@ def analysis():
     storage=Storage()
     data=storage.get_object(bucket,"prova.csv")
     df = pd.read_csv(BytesIO(data))
+    
+    #Most Retweets
+    #print(df.describe())
+    #ax=df["Retweets"].plot(kind='density',figsize=(14,6))
+    #ax.axvline(df["Retweets"].mean(), color='red')
+    #ax.axvline(df["Retweets"].median(), color='green')
+    #print(mostRetweeted(df,4))
+    
+    #Feelings
+    feelings(df)
+   
+    
+    
+    #MostCommonWords
+    mostCommonWords(df,5)
+    
+
+    #MostCommonHashtags
+    #y=mostCommonHashtags(df,5)
+    #hDf=pd.DataFrame(y)
+    #aux=hDf.set_index(0)[1].plot(kind="bar",subplots=True)
     
 analysis()
 print("End of analysis")
