@@ -19,9 +19,10 @@ linksss=[]
 items = []
 
 filenames=[]
-texts=[]
+commentarios=[]
 votes=[]
 dates=[]
+texts=[]
 
 class TestSpider(scrapy.Spider):
   name = "test" 
@@ -29,7 +30,7 @@ class TestSpider(scrapy.Spider):
   allowed_domains = ['reddit.com']
 
   # The URLs to start with
-  #start_urls = ['https://www.reddit.com/r/COVID19/']  
+  start_urls = ['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
   # This spider has one rule: extract all (unique and canonicalized) links, follow them and parse them using the parse_items method
   rules = [
       Rule(
@@ -42,7 +43,7 @@ class TestSpider(scrapy.Spider):
       )
   ]
 
-  maxdepth = 2
+  maxdepth = 1
 
   def start_requests(self):
         for url in self.start_urls:
@@ -91,7 +92,7 @@ class TestSpider(scrapy.Spider):
       tema=''
       covid=False
       for i in aux:
-            if i == 'COVID19':
+            if i == 'COVID19' or i == 'COVID19positive' or i == 'Coronavirus':
                 covid=True
             if i == 'comments' and covid == True:
                 tema = 'comments'
@@ -106,10 +107,12 @@ class TestSpider(scrapy.Spider):
                 date = response.css('._3jOxDPIQ0KaOWpzvSQo-1s::text').extract()
                 vot = response.css('._1rZYMD_4xY3gRcSS3p8ODO::text').extract()
                 comments = response.css('.FHCV02u6Cp2zYL0fhQPsO::text').extract()
-                linksss.append(aux[7])
+                text = response.css('._1qeIAgB0cPwnLhDF9XSiJM::text').extract()
+                linksss.append(response.url)
                 filenames.append(titles)
                 comment=comments[0].split(' ')[0]
-                texts.append(comment)
+                commentarios.append(comment)
+                texts.append(text)
                 if vot[0] == "Vote":
                         vot[0]="0"
                 votes.append(vot[0])
@@ -151,9 +154,9 @@ class TestSpider(scrapy.Spider):
 process = CrawlerProcess()
 web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
 
-def getWebsHtml(webs):
+if __name__ == '__main__':
     process = CrawlerProcess()
-    TestSpider.start_urls=webs
+    process.crawl(TestSpider)
     process.start()
     
     storage=Storage()
@@ -180,18 +183,22 @@ def getWebsHtml(webs):
           names.append(num) """
       
     dict={
-        "filenames":linksss,
-        "Titulos":filenames, 
-        "comments":texts,
-        "votes": votes,
-        "dates": dates
+        "URL":linksss,
+        "Titles":filenames, 
+        "Texts": texts,
+        "Comments":commentarios,
+        "Votes": votes,
+        "Dates": dates
         }
     #print(dict)
     #print('\n\n\n\n\n')
     list=storage.list_keys(bucket)
     #storage.delete_objects('cloudbuttonhackathon',list)
 
-    storage.put_object(bucket,"dataWEB.json",json.dumps(dict))
+    #storage.put_object(bucket,"dataWEB.json",json.dumps(dict))
+    inf = pd.DataFrame.from_dict(dict)
+    inf.to_csv("hola.csv", index=False)
+    #storage.put_object(bucket, "data.csv", inf.to_csv(index=False))
 
     #pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
     #pdOBJ.to_csv('data.csv', index=False)

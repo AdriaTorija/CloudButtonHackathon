@@ -1,3 +1,4 @@
+from getWebdata import getWebsHtml
 import lithops
 import pandas as pd
 from lithops import Storage
@@ -76,3 +77,5 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
 
 with Pool() as pool:
     result=pool.starmap(dataSearch,[("Covid19",10)])
+
+pool.starmap(getWebsHtml(web));
