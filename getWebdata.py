@@ -151,14 +151,18 @@ class TestSpider(scrapy.Spider):
     storage = Storage()
     print(filename)
     storage.put_object(bucket,filename,getText(response.body)) """
-process = CrawlerProcess()
-web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
 
-if __name__ == '__main__':
+#process = CrawlerProcess()
+#web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
+
+
+ 
+
+def getWebsHtml():
+    #TestSpider.start_urls=['https://www.reddit.com/r/COVID19/']     #Example
     process = CrawlerProcess()
     process.crawl(TestSpider)
-    process.start()
-    
+    process.start() # the script will block here until the crawling is finished """
     storage=Storage()
     list=storage.list_keys(bucket)
     
@@ -202,12 +206,6 @@ if __name__ == '__main__':
 
     #pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
     #pdOBJ.to_csv('data.csv', index=False)
-""" def getWebsHtml():
-    #TestSpider.start_urls=['https://www.reddit.com/r/COVID19/']     #Example
-    process = CrawlerProcess()
-    process.crawl(TestSpider)
-    process.start() # the script will block here until the crawling is finished """
-
  
 
 
