@@ -7,7 +7,7 @@ from scrapy.spiders import Rule, CrawlSpider
 #from DataBlogger import DatabloggerScraperItem
 import json
 import pandas as pd
-from lithops import Storage
+from lithops import Storage, storage
 from twisted.python.log import NullFile
 from analyseHtml import getText
 import os
@@ -108,15 +108,20 @@ class TestSpider(scrapy.Spider):
                 vot = response.css('._1rZYMD_4xY3gRcSS3p8ODO::text').extract()
                 comments = response.css('.FHCV02u6Cp2zYL0fhQPsO::text').extract()
                 text = response.css('._1qeIAgB0cPwnLhDF9XSiJM::text').extract()
-                linksss.append(response.url)
-                filenames.append(titles)
+
                 comment=comments[0].split(' ')[0]
-                commentarios.append(comment)
-                texts.append(text)
                 if vot[0] == "Vote":
                         vot[0]="0"
-                votes.append(vot[0])
-                dates.append(date[0])
+                dict={
+                "URL":response.url,
+                "Titles":titles, 
+                "Texts": text[0],
+                "Comments":comment,
+                "Votes": vot[0],
+                "Dates": date[0]
+                }
+                storage=Storage()
+                storage.put_object(bucket, response.url, dict)
       # Update the print logic to show what page contain a link to the
       # current page, and what was the text of the link
       #print(depth, response.url, '<-', from_url, from_text, sep=' ')
@@ -185,6 +190,7 @@ def getWebsHtml():
                     num[i]=y
               i=i+1
           names.append(num) """
+    
       
     dict={
         "URL":linksss,
@@ -196,11 +202,11 @@ def getWebsHtml():
         }
     #print(dict)
     #print('\n\n\n\n\n')
-    list=storage.list_keys(bucket)
+    #list=storage.list_keys(bucket)
     #storage.delete_objects('cloudbuttonhackathon',list)
 
     #storage.put_object(bucket,"dataWEB.json",json.dumps(dict))
-    inf = pd.DataFrame.from_dict(dict)
+    inf = pd.DataFrame.from_dict(list)
     inf.to_csv("hola.csv", index=False)
     #storage.put_object(bucket, "data.csv", inf.to_csv(index=False))
 
