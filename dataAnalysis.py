@@ -1,5 +1,4 @@
 import pandas as pd
-from translate.translator import translator
 import getOfficialData as getOData
 #df= pd.DataFrame({'tweets':tweets,'time':time,'likes':likes})
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -8,8 +7,8 @@ from io import BytesIO
 from collections import Counter
 import matplotlib.pyplot as plt
 from googletrans import Translator
-
-
+import nltk
+nltk.download('vader_lexicon')
 
 bucket='cloudbuttonhackathon'
 def mostCommonWords(df,n):
@@ -28,7 +27,6 @@ def feelings(df):
     positive, neutral, negative = [], [], []
     for text in (df["Text"]):
         text=translator.translate(text,dest="en").text
-        print(text)
         vs = analyzer.polarity_scores(str(text))
     #polary = analyzer.polarity_scores()
         if vs['compound'] >= 0.4:
