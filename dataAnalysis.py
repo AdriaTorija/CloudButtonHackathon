@@ -1,7 +1,5 @@
-import lithops
 from nltk.util import pr
 import pandas as pd
-import getOfficialData as getOData
 #df= pd.DataFrame({'tweets':tweets,'time':time,'likes':likes})
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from lithops import Storage
@@ -12,7 +10,7 @@ from googletrans import Translator
 import seaborn
 import nltk
 from lithops.multiprocessing import Pool
-nltk.download('vader_lexicon')
+
 
 bucket='cloudbuttonhackathon'
 def mostCommonWords(df,n):
@@ -26,7 +24,8 @@ def mostCommonWords(df,n):
     #wDf.set_index(0)[1].plot(kind="pie",subplots=True)
     return m
 
-def feelings(df):
+def feelings(df,n):
+    nltk.download('vader_lexicon')
     translator = Translator()
     analyzer = SentimentIntensityAnalyzer()
     pos, neg, neu = 0, 0, 0
@@ -47,13 +46,9 @@ def feelings(df):
             neg += 1
             if (text) not in negative:
                 negative.append(text)
-  
-    dict={
-        "Positives":pos,
-        "Neutrals":neu,
-        "Negatives":neg,        
-    }
-    return pd.DataFrame([[key, dict[key]] for key in dict.keys()])
+    dict=[pos,neu,neg]
+
+    return dict
     
 
 def mostCommonHashtags(df,n):
@@ -68,7 +63,7 @@ def mostCommonHashtags(df,n):
 def mostRetweeted(df,n):
     return max(df["Retweets"])
     
-def verifiedTweet(df):
+def verifiedTweet(df,n):
     yes = 0
     no = 0
     for verified in df["Verified"]:
@@ -77,17 +72,13 @@ def verifiedTweet(df):
         else:
             no = no + 1
 
-    dict={
-         "Verified":yes,
-         "NotVerified":no
-    }
-
-    return pd.DataFrame([[key, dict[key]] for key in dict.keys()])
+    dict=[yes,no]
+    return dict
 
 def main():
 
     storage=Storage()
-    data=storage.get_object(bucket,"prova.csv")
+    data=storage.get_object(bucket,"tweets.csv")
     df = pd.read_csv(BytesIO(data))
     fig, axs = plt.subplots(1, 5)
     
@@ -95,9 +86,8 @@ def main():
     with Pool() as pool:
         mcW=pool.starmap(mostCommonWords,[(df,5)])
         mcH=pool.starmap(mostCommonHashtags, [(df,5)])
-        #feel=pool.starmap(feelings, [(df)])
-        #veri=pool.starmap(verifiedTweet, [(df)])
-
+        feel=pool.starmap(feelings, [(df,"")])
+        veri=pool.starmap(verifiedTweet, [(df,"")])
 
     seaborn.scatterplot(x="User", y="Retweets", data=df, ax=axs[0])
     pdmcW = pd.DataFrame(mcW[0])
@@ -105,12 +95,20 @@ def main():
     pdmcH = pd.DataFrame(mcH[0])
     seaborn.barplot(x=0, y=1, data=pdmcH, ax=axs[2])
 
-    #pdfeel = pd.DataFrame(feel[0])
-    pdfeel = feelings(df)
-    seaborn.barplot(x=0, y=1, data=pdfeel, ax=axs[3])
-
-    #pdveri = pd.DataFrame(feel[0])
-    pdverified = verifiedTweet(df)
+    pdfeel = pd.DataFrame(feel[0])
+    aux={
+        "Positives":feel[0][0],
+        "Neutrals":feel[0][1],
+        "Negatives":feel[0][2],        
+    }
+    feel=pd.DataFrame(aux.items())
+    seaborn.barplot(x=0, y=1, data=feel, ax=axs[3])
+    
+    aux={
+         "Verified":veri[0][0],
+         "NotVerified":veri[0][1]
+    }
+    pdverified=pd.DataFrame(aux.items())
     seaborn.barplot(x=0, y=1, data=pdverified, ax=axs[4])
     plt.show()
 

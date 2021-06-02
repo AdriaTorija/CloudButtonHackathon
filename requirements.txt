@@ -20,6 +20,10 @@ tweepy
 vaderSentiment
 scrapy
 simplejson
+seaborn
+nltk
+googletrans==3.1.0a0
+setuptools
 #virtualenv
 Twisted
 PyJWT

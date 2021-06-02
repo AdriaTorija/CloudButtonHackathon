@@ -43,7 +43,7 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     geo = []
     retweets = []
     #Substraction of information
-    lang= "lang:es"
+    lang= " lang:es OR lang:en"
 
     stringSearch="#"+hashtag + lang 
     print("Searching: "+stringSearch)
@@ -73,7 +73,7 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     }
     
     inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Text', 'Hashtags', 'Verified'])
-    storage.put_object(bucket, "prova.csv", inf.to_csv(index=False))
+    storage.put_object(bucket, "tweets.csv", inf.to_csv(index=False))
 
 
     #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
@@ -83,8 +83,8 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     #result=pool.starmap(dataSearch,[("Covid19",10)],["Messi",10])
 
 def main():
-    print("XD")
-    dataSearch("Covid19",200)
+    
+    dataSearch("Covid19",300)
     
 if __name__ == '__main__':
     main()
