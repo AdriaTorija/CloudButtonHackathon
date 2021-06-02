@@ -1,5 +1,5 @@
+import lithops
 from nltk.util import pr
-import numpy as np
 import pandas as pd
 import getOfficialData as getOData
 #df= pd.DataFrame({'tweets':tweets,'time':time,'likes':likes})
@@ -24,7 +24,7 @@ def mostCommonWords(df,n):
         print(m)
     #wDf= pd.DataFrame(m)
     #wDf.set_index(0)[1].plot(kind="pie",subplots=True)
-    return pd.DataFrame(m)
+    return m
 
 def feelings(df):
     translator = Translator()
@@ -69,51 +69,50 @@ def mostRetweeted(df,n):
     return max(df["Retweets"])
     
 def verifiedTweet(df):
-    i=0
-    x=[]
-    for j in df["Verified"]:
-        
-        if not j:
-            x.append(df.loc[[i]])
-        i = i+1
-    return x
-            
-def analysis():
+    yes = 0
+    no = 0
+    for verified in df["Verified"]:
+        if verified:
+            yes = yes +1
+        else:
+            no = no + 1
+
+    dict={
+         "Verified":yes,
+         "NotVerified":no
+    }
+
+    return pd.DataFrame([[key, dict[key]] for key in dict.keys()])
+
+def main():
+
     storage=Storage()
     data=storage.get_object(bucket,"prova.csv")
     df = pd.read_csv(BytesIO(data))
-    fig, axs = plt.subplots(1, 3)
-    #Most Retweets
-    #print(df.describe())
-    #ax=df["Retweets"].plot(kind='density',figsize=(14,6))
-    #ax.axvline(df["Retweets"].mean(), color='red')
-    #ax.axvline(df["Retweets"].median(), color='green')
-    print(mostRetweeted(df,4))
-
-    #Feelings
-    feel = feelings(df)
-    seaborn.barplot(x=0, y=1, data=feel, ax=axs[0])
-
-    #MostCommonWords
-    wDf = mostCommonWords(df,5)
-    seaborn.barplot(x=0, y=1, data=wDf, ax=axs[1])
-    axs[1].set(xlabel="Paraula", ylabel = "N vegades")
-
-    #Users i retweets
-    seaborn.scatterplot(x="User", y="Retweets", data=df, ax=axs[2])
-    #plt.show()
+    fig, axs = plt.subplots(1, 5)
     
 
-    #MostCommonHashtags
-    #y=mostCommonHashtags(df,5)
-    #hDf=pd.DataFrame(y)
-    #aux=hDf.set_index(0)[1].plot(kind="bar",subplots=True)
-
-
-def main():
     with Pool() as pool:
-        result=pool.starmap(analysis, [()])
-    
+        mcW=pool.starmap(mostCommonWords,[(df,5)])
+        mcH=pool.starmap(mostCommonHashtags, [(df,5)])
+        #feel=pool.starmap(feelings, [(df)])
+        #veri=pool.starmap(verifiedTweet, [(df)])
+
+
+    seaborn.scatterplot(x="User", y="Retweets", data=df, ax=axs[0])
+    pdmcW = pd.DataFrame(mcW[0])
+    seaborn.barplot(x=0, y=1, data=pdmcW, ax=axs[1])
+    pdmcH = pd.DataFrame(mcH[0])
+    seaborn.barplot(x=0, y=1, data=pdmcH, ax=axs[2])
+
+    #pdfeel = pd.DataFrame(feel[0])
+    pdfeel = feelings(df)
+    seaborn.barplot(x=0, y=1, data=pdfeel, ax=axs[3])
+
+    #pdveri = pd.DataFrame(feel[0])
+    pdverified = verifiedTweet(df)
+    seaborn.barplot(x=0, y=1, data=pdverified, ax=axs[4])
+    plt.show()
 
     print('hola')
     
