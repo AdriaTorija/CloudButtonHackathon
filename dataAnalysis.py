@@ -1,3 +1,5 @@
+from nltk.util import pr
+import numpy as np
 import pandas as pd
 import getOfficialData as getOData
 #df= pd.DataFrame({'tweets':tweets,'time':time,'likes':likes})
@@ -7,7 +9,9 @@ from io import BytesIO
 from collections import Counter
 import matplotlib.pyplot as plt
 from googletrans import Translator
+import seaborn
 import nltk
+from lithops.multiprocessing import Pool
 nltk.download('vader_lexicon')
 
 bucket='cloudbuttonhackathon'
@@ -17,8 +21,10 @@ def mostCommonWords(df,n):
         for word in str(text).split():
             splitText.append(word)
         m = Counter(splitText).most_common(n)
-    wDf= pd.DataFrame(m)
-    wDf.set_index(0)[1].plot(kind="pie",subplots=True)
+        print(m)
+    #wDf= pd.DataFrame(m)
+    #wDf.set_index(0)[1].plot(kind="pie",subplots=True)
+    return pd.DataFrame(m)
 
 def feelings(df):
     translator = Translator()
@@ -47,12 +53,7 @@ def feelings(df):
         "Neutrals":neu,
         "Negatives":neg,        
     }
-    print(dict)
-    #aux= pd.DataFrame.from_dict(dict,orient='index')
-    
-    #aux.transpose()
-    #aux.plot(kind='bar',title="Feelings",subplots=True)
-    #print(aux.describe())
+    return pd.DataFrame([[key, dict[key]] for key in dict.keys()])
     
 
 def mostCommonHashtags(df,n):
@@ -81,18 +82,26 @@ def analysis():
     storage=Storage()
     data=storage.get_object(bucket,"prova.csv")
     df = pd.read_csv(BytesIO(data))
-    
+    fig, axs = plt.subplots(1, 3)
     #Most Retweets
     #print(df.describe())
     #ax=df["Retweets"].plot(kind='density',figsize=(14,6))
     #ax.axvline(df["Retweets"].mean(), color='red')
     #ax.axvline(df["Retweets"].median(), color='green')
-    #print(mostRetweeted(df,4))
+    print(mostRetweeted(df,4))
+
     #Feelings
-    feelings(df)
-    
+    feel = feelings(df)
+    seaborn.barplot(x=0, y=1, data=feel, ax=axs[0])
+
     #MostCommonWords
-    #mostCommonWords(df,5)
+    wDf = mostCommonWords(df,5)
+    seaborn.barplot(x=0, y=1, data=wDf, ax=axs[1])
+    axs[1].set(xlabel="Paraula", ylabel = "N vegades")
+
+    #Users i retweets
+    seaborn.scatterplot(x="User", y="Retweets", data=df, ax=axs[2])
+    #plt.show()
     
 
     #MostCommonHashtags
@@ -101,7 +110,12 @@ def analysis():
     #aux=hDf.set_index(0)[1].plot(kind="bar",subplots=True)
 
 
+def main():
+    with Pool() as pool:
+        result=pool.starmap(analysis, [()])
+    
 
-analysis()
-print("Hola")
-print("End of analysis")
+    print('hola')
+    
+if __name__ == '__main__':
+    main()

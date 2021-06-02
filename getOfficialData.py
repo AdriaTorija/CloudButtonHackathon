@@ -2,6 +2,7 @@ import io
 import tweepy
 import pandas as pd
 from lithops import Storage
+from lithops.multiprocessing import Pool
 import json
 import csv
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
@@ -47,8 +48,6 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     stringSearch="#"+hashtag + lang 
     print("Searching: "+stringSearch)
     for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended").items(number_of_tweets):
-        print(i)
-        print("HOLA")
         tweets.append(i.full_text)
         likes.append(i.favorite_count)
         time.append(str(i.created_at))
@@ -68,18 +67,24 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
         "Retweets":retweets,
         "Date":time,
         "Url":urls,
-        "Location":geo,
         "Text":tweets,
         "Hashtags":hashtags,
         "Verified":verified,
     }
     
-    print(dict)
-    inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Location', 'Text', 'Hashtags', 'Verified'])
+    inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Text', 'Hashtags', 'Verified'])
     storage.put_object(bucket, "prova.csv", inf.to_csv(index=False))
 
 
     #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
     #storage.put_object(bucket,"text.txt",str(tweets)
 
-#dataSearch("Covid19",5)
+#with Pool() as pool:
+    #result=pool.starmap(dataSearch,[("Covid19",10)],["Messi",10])
+
+def main():
+    print("XD")
+    dataSearch("Covid19",200)
+    
+if __name__ == '__main__':
+    main()
