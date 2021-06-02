@@ -1,5 +1,5 @@
 from lithops.executors import FunctionExecutor
-from getWebdata import getWebsHtml
+#from getWebdata import getWebsHtml
 import lithops
 import pandas as pd
 from lithops import Storage
@@ -10,6 +10,7 @@ from scrapy import linkextractors
 from scrapy.crawler import CrawlerProcess
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+
 
 webs=['https://www.reddit.com/r/COVID19/']
 web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
@@ -48,10 +49,10 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     geo = []
     retweets = []
     #Substraction of information
-    lang= " lang:en OR lang:ca"
+    lang= " lang:en OR lang:es"
     stringSearch="#"+hashtag + lang 
     print("Searching: "+stringSearch)
-    for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended",until="2021-05-22").items(number_of_tweets):
+    for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended").items(number_of_tweets):
     #for i in tweepy.Cursor(api.search_30_day("CloudButton0",q=stringSearch,fromDate="2021-05-0",toDate="2021-05-12",maxResults=4)).items(number_of_tweets):
         tweets.append(i.full_text)
         likes.append(i.favorite_count)
@@ -81,7 +82,7 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Location', 'Text', 'Hashtags', 'Verified'])
     storage.put_object(bucket, "prova.csv", inf.to_csv(index=False))
 
-
+'''
 #scrapy
 
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
@@ -110,7 +111,7 @@ class TestSpider(scrapy.Spider):
               unique=True
           ),
           follow=True,
-          callback="parse_item"
+          callback="parse"
       )
   ]
 
@@ -183,7 +184,16 @@ class TestSpider(scrapy.Spider):
                 comment=comments[0].split(' ')[0]
                 if vot[0] == "Vote":
                         vot[0]="0"
-                dict={
+                if comment[-1] == "k":
+                        comment = comment.rstrip(comment[-1])
+                        comment = comment * 1000
+                linksss.append(response.url)
+                commentarios.append(comment)
+                votes.append(vot[0])
+                texts.append(text[0])
+                filenames.append(titles)
+                dates.append(date[0])
+                """ dict={
                 "URL":response.url,
                 "Titles":titles, 
                 "Texts": text[0],
@@ -192,7 +202,7 @@ class TestSpider(scrapy.Spider):
                 "Dates": date[0]
                 }
                 storage=Storage()
-                storage.put_object(bucket, response.url, dict)
+                storage.put_object(bucket, response.url, dict) """
       # Update the print logic to show what page contain a link to the
       # current page, and what was the text of the link
       #print(depth, response.url, '<-', from_url, from_text, sep=' ')
@@ -232,15 +242,15 @@ class TestSpider(scrapy.Spider):
 #web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
 
 
- 
 
-def getWebsHtml():
+
+def getWebsHtml(data):
     #TestSpider.start_urls=['https://www.reddit.com/r/COVID19/']     #Example
     process = CrawlerProcess()
     process.crawl(TestSpider)
     process.start() # the script will block here until the crawling is finished """
     storage=Storage()
-    list=storage.list_keys(bucket)
+    #list=storage.list_keys(bucket)
     
 
     """ for a in list:
@@ -277,17 +287,29 @@ def getWebsHtml():
     #storage.delete_objects('cloudbuttonhackathon',list)
 
     #storage.put_object(bucket,"dataWEB.json",json.dumps(dict))
-    inf = pd.DataFrame.from_dict(list)
-    inf.to_csv("hola.csv", index=False)
-    #storage.put_object(bucket, "data.csv", inf.to_csv(index=False))
+    inf = pd.DataFrame.from_dict(dict)
+    inf.to_csv("data.csv", index=False)
+    csv = pd.read_csv(r'data.csv')
+    res = seaborn.scatterplot(x="URL", y="Comments", data=csv)
+    plt.show()
+    storage.put_object(bucket, "data.csv", inf.to_csv(index=False))
+
 
     #pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
     #pdOBJ.to_csv('data.csv', index=False)
 
 
 data= []
+'''
+""" with Pool() as pool:
+    result=pool.map(getWebsHtml,[data]) """
 
-with Pool() as pool:
-    result=pool.map(getWebsHtml,[data])
+def main():
+    print("XD")
+    dataSearch("Covid19",12)
+if __name__ == '__main__':
+    main()
+
+
 
 #pool.starmap(getWebsHtml(web))

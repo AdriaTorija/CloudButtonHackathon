@@ -42,12 +42,13 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     geo = []
     retweets = []
     #Substraction of information
-    lang= " lang:en OR lang:ca"
+    lang= "lang:es"
 
     stringSearch="#"+hashtag + lang 
     print("Searching: "+stringSearch)
-    for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended",until="2021-05-22").items(number_of_tweets):
-    #for i in tweepy.Cursor(api.search_30_day("CloudButton0",q=stringSearch,fromDate="2021-05-0",toDate="2021-05-12",maxResults=4)).items(number_of_tweets):
+    for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended").items(number_of_tweets):
+        print(i)
+        print("HOLA")
         tweets.append(i.full_text)
         likes.append(i.favorite_count)
         time.append(str(i.created_at))
@@ -61,9 +62,6 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
         names.append(i.user.screen_name)
         verified.append(i.user.verified)
         retweets.append(i.retweet_count)
-        
-    #Storing Information
-    
     dict={
         "User":names,
         "Likes":likes,
@@ -76,7 +74,7 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
         "Verified":verified,
     }
     
-
+    print(dict)
     inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Location', 'Text', 'Hashtags', 'Verified'])
     storage.put_object(bucket, "prova.csv", inf.to_csv(index=False))
 
@@ -84,3 +82,4 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
     #storage.put_object(bucket,"text.txt",str(tweets)
 
+#dataSearch("Covid19",5)

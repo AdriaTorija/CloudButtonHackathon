@@ -1,4 +1,5 @@
 import pandas as pd
+from translate.translator import translator
 import getOfficialData as getOData
 #df= pd.DataFrame({'tweets':tweets,'time':time,'likes':likes})
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -6,7 +7,8 @@ from lithops import Storage
 from io import BytesIO
 from collections import Counter
 import matplotlib.pyplot as plt
-import nltk
+from googletrans import Translator
+
 
 
 bucket='cloudbuttonhackathon'
@@ -20,11 +22,13 @@ def mostCommonWords(df,n):
     wDf.set_index(0)[1].plot(kind="pie",subplots=True)
 
 def feelings(df):
-    
+    translator = Translator()
     analyzer = SentimentIntensityAnalyzer()
     pos, neg, neu = 0, 0, 0
     positive, neutral, negative = [], [], []
     for text in (df["Text"]):
+        text=translator.translate(text,dest="en").text
+        print(text)
         vs = analyzer.polarity_scores(str(text))
     #polary = analyzer.polarity_scores()
         if vs['compound'] >= 0.4:
@@ -45,10 +49,12 @@ def feelings(df):
         "Neutrals":neu,
         "Negatives":neg,        
     }
-    aux= pd.DataFrame.from_dict(dict,orient='index')
-    aux.transpose()
-    aux.plot(kind='bar',title="Feelings",subplots=True)
-    print(aux.describe())
+    print(dict)
+    #aux= pd.DataFrame.from_dict(dict,orient='index')
+    
+    #aux.transpose()
+    #aux.plot(kind='bar',title="Feelings",subplots=True)
+    #print(aux.describe())
     
 
 def mostCommonHashtags(df,n):
@@ -84,20 +90,19 @@ def analysis():
     #ax.axvline(df["Retweets"].mean(), color='red')
     #ax.axvline(df["Retweets"].median(), color='green')
     #print(mostRetweeted(df,4))
-    
     #Feelings
     feelings(df)
-   
-    
     
     #MostCommonWords
-    mostCommonWords(df,5)
+    #mostCommonWords(df,5)
     
 
     #MostCommonHashtags
     #y=mostCommonHashtags(df,5)
     #hDf=pd.DataFrame(y)
     #aux=hDf.set_index(0)[1].plot(kind="bar",subplots=True)
-    
+
+
+
 analysis()
 print("End of analysis")
