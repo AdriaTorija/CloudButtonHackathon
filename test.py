@@ -1,5 +1,5 @@
 from lithops.executors import FunctionExecutor
-from getWebdata import getWebsHtml
+#from getWebdata import getWebsHtml
 import lithops
 import pandas as pd
 from lithops import Storage
@@ -10,6 +10,8 @@ from scrapy import linkextractors
 from scrapy.crawler import CrawlerProcess
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+import seaborn
+import matplotlib.pyplot as plt
 
 webs=['https://www.reddit.com/r/COVID19/']
 web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
@@ -110,7 +112,7 @@ class TestSpider(scrapy.Spider):
               unique=True
           ),
           follow=True,
-          callback="parse_item"
+          callback="parse"
       )
   ]
 
@@ -183,7 +185,16 @@ class TestSpider(scrapy.Spider):
                 comment=comments[0].split(' ')[0]
                 if vot[0] == "Vote":
                         vot[0]="0"
-                dict={
+                if comment[-1] == "k":
+                        comment = comment.rstrip(comment[-1])
+                        comment = comment * 1000
+                linksss.append(response.url)
+                commentarios.append(comment)
+                votes.append(vot[0])
+                texts.append(text[0])
+                filenames.append(titles)
+                dates.append(date[0])
+                """ dict={
                 "URL":response.url,
                 "Titles":titles, 
                 "Texts": text[0],
@@ -192,7 +203,7 @@ class TestSpider(scrapy.Spider):
                 "Dates": date[0]
                 }
                 storage=Storage()
-                storage.put_object(bucket, response.url, dict)
+                storage.put_object(bucket, response.url, dict) """
       # Update the print logic to show what page contain a link to the
       # current page, and what was the text of the link
       #print(depth, response.url, '<-', from_url, from_text, sep=' ')
@@ -234,13 +245,13 @@ class TestSpider(scrapy.Spider):
 
  
 
-def getWebsHtml():
+def getWebsHtml(data):
     #TestSpider.start_urls=['https://www.reddit.com/r/COVID19/']     #Example
     process = CrawlerProcess()
     process.crawl(TestSpider)
     process.start() # the script will block here until the crawling is finished """
     storage=Storage()
-    list=storage.list_keys(bucket)
+    #list=storage.list_keys(bucket)
     
 
     """ for a in list:
@@ -277,9 +288,13 @@ def getWebsHtml():
     #storage.delete_objects('cloudbuttonhackathon',list)
 
     #storage.put_object(bucket,"dataWEB.json",json.dumps(dict))
-    inf = pd.DataFrame.from_dict(list)
-    inf.to_csv("hola.csv", index=False)
-    #storage.put_object(bucket, "data.csv", inf.to_csv(index=False))
+    inf = pd.DataFrame.from_dict(dict)
+    inf.to_csv("data.csv", index=False)
+    csv = pd.read_csv(r'data.csv')
+    res = seaborn.scatterplot(x="URL", y="Comments", data=csv)
+    plt.show()
+    storage.put_object(bucket, "data.csv", inf.to_csv(index=False))
+
 
     #pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
     #pdOBJ.to_csv('data.csv', index=False)
@@ -287,7 +302,11 @@ def getWebsHtml():
 
 data= []
 
-with Pool() as pool:
-    result=pool.map(getWebsHtml,[data])
+""" with Pool() as pool:
+    result=pool.map(getWebsHtml,[data]) """
+
+
+if __name__ == '__main__':
+    getWebsHtml("")
 
 #pool.starmap(getWebsHtml(web))
