@@ -10,6 +10,8 @@ from scrapy import linkextractors
 from scrapy.crawler import CrawlerProcess
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
+import seaborn
+import matplotlib.pyplot as plt
 
 
 webs=['https://www.reddit.com/r/COVID19/']
@@ -241,9 +243,6 @@ class TestSpider(scrapy.Spider):
 #process = CrawlerProcess()
 #web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
 
-
-
-
 def getWebsHtml(data):
     #TestSpider.start_urls=['https://www.reddit.com/r/COVID19/']     #Example
     process = CrawlerProcess()
@@ -309,7 +308,6 @@ def main():
     dataSearch("Covid19",12)
 if __name__ == '__main__':
     main()
-
 
 
 #pool.starmap(getWebsHtml(web))
