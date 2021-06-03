@@ -1,4 +1,5 @@
 import io
+from re import S
 import tweepy
 import pandas as pd
 from lithops import Storage
@@ -99,7 +100,12 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     #result=pool.starmap(dataSearch,[("Covid19",10)],["Messi",10])
 
 def main():
-    dataSearch("Astrazeneca",2)
-    
+    #dataSearch("Astrazeneca",2)
+    with Pool() as pool:
+        result=pool.starmap(dataSearch,[("Covid19",10),("Messi",10)])
+    storage=Storage()
+    data=storage.get_object(bucket,"tweets.csv")
+    df = pd.read_csv(BytesIO(data))  
+    print(df)  
 if __name__ == '__main__':
     main()
