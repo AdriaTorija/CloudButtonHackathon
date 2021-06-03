@@ -3,8 +3,8 @@ import tweepy
 import pandas as pd
 from lithops import Storage
 from lithops.multiprocessing import Pool
-import json
-import csv
+from io import BytesIO
+
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
 
 
@@ -12,7 +12,6 @@ bucket='cloudbuttonhackathon'                  #Change this value if you want to
 def dataSearch(hashtag,number_of_tweets):                       #keys: String of the file with keys
     #Reading the keys for connection                #Hashtag: hashtag we want to search and save tweets without #
     storage = Storage()
-    storage=Storage()
     
     f=storage.get_object(bucket,"keys.txt")
 
@@ -71,9 +70,26 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
         "Hashtags":hashtags,
         "Verified":verified,
     }
+    inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Text', 'Hashtags', 'Verified'])    
+    nofile=1
+    for i in storage.list_keys(bucket):
+        if i == "tweets.csv":
+            nofile=0
+    if(nofile == 0):
+        data=storage.get_object(bucket,"tweets.csv")
+        df = pd.read_csv(BytesIO(data))
+        print(inf)
+        result= df.append([inf])
+        print(result)
+        storage.put_object(bucket, "tweets.csv",result.to_csv(index=False))
+        
+    else:
+        storage.put_object(bucket, "tweets.csv", inf.to_csv(index=False))
     
-    inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Text', 'Hashtags', 'Verified'])
-    storage.put_object(bucket, "tweets.csv", inf.to_csv(index=False))
+
+
+
+
 
 
     #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
@@ -83,8 +99,7 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     #result=pool.starmap(dataSearch,[("Covid19",10)],["Messi",10])
 
 def main():
-    
-    dataSearch("Covid19",300)
+    dataSearch("Astrazeneca",2)
     
 if __name__ == '__main__':
     main()
