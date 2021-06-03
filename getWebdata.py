@@ -1,36 +1,69 @@
-from pickle import FALSE
 import scrapy
-from scrapy import linkextractors
+import pandas as pd
+import seaborn
+import matplotlib.pyplot as plt
+import datetime
 from scrapy.crawler import CrawlerProcess
 from scrapy.linkextractors import LinkExtractor
-from scrapy.spiders import Rule, CrawlSpider
-#from DataBlogger import DatabloggerScraperItem
-import json
-import pandas as pd
-from lithops import Storage, storage
-from twisted.python.log import NullFile
-from analyseHtml import getText
-import os
+from scrapy.spiders import Rule
+from lithops import Storage
+from dateutil.relativedelta import relativedelta
 
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
-words= ['Covid', 'covid19', 'virus', 'Coronavirus', 'COVID-19', 'COVID', 'vaccine', 'Vaccine', 'positive', 'Positive', 'Hospital', 'hospital']
-names=[]
-linksss=[]
-items = []
+covid= ['Covid', 'covid19', 'Coronavirus', 'COVID-19', 'COVID']
+virus = ['virus']
+vacuna = ['vaccine', 'Vaccine', 'astrazeneca', 'AstraZeneca']
+positiu = ['positive', 'Positive']
+hospital = ['Hospital', 'hospital']
+words = [covid, virus, vacuna, positiu, hospital] #list of related word about covid
+names=[] #names 
+linksss=[] #url 
+filenames=[] #titles
+commentarios=[] #comments
+votes=[] #votes
+dates=[] #dates
+texts=[] #texts
+cov=[]
+vir=[]
+pos=[]
+vac=[]
+hos=[]
 
-filenames=[]
-commentarios=[]
-votes=[]
-dates=[]
-texts=[]
+def get_past_date(str_days_ago): #function to get the dates from strings like 1 hour ago
+    TODAY = datetime.date.today()
+    splitted = str_days_ago.split()
+    if len(splitted) == 1 and splitted[0].lower() == 'today':
+        return str(TODAY.isoformat())
+    elif len(splitted) == 1 and splitted[0].lower() == 'yesterday':
+        date = TODAY - relativedelta(days=1)
+        return str(date.isoformat())
+    elif splitted[1].lower() in ['hour', 'hours', 'hr', 'hrs', 'h']:
+        date = datetime.datetime.now() - relativedelta(hours=int(splitted[0]))
+        return str(date.date().isoformat())
+    elif splitted[1].lower() in ['day', 'days', 'd']:
+        date = TODAY - relativedelta(days=int(splitted[0]))
+        return str(date.isoformat())
+    elif splitted[1].lower() in ['wk', 'wks', 'week', 'weeks', 'w']:
+        date = TODAY - relativedelta(weeks=int(splitted[0]))
+        return str(date.isoformat())
+    elif splitted[1].lower() in ['mon', 'mons', 'month', 'months', 'm']:
+        date = TODAY - relativedelta(months=int(splitted[0]))
+        return str(date.isoformat())
+    elif splitted[1].lower() in ['yrs', 'yr', 'years', 'year', 'y']:
+        date = TODAY - relativedelta(years=int(splitted[0]))
+        return str(date.isoformat())
+    elif splitted[1].lower() in ['min', 'm', 'minutes', 'minute']:
+        date = TODAY - relativedelta(years=int(splitted[0]))
+        return str(TODAY.isoformat())
+    else:
+        return "Wrong Argument format"
 
-class TestSpider(scrapy.Spider):
+class TestSpider(scrapy.Spider): #main class scrppy
   name = "test" 
 
   allowed_domains = ['reddit.com']
-
   # The URLs to start with
-  start_urls = ['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
+  start_urls = ['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/'] 
   # This spider has one rule: extract all (unique and canonicalized) links, follow them and parse them using the parse_items method
   rules = [
       Rule(
@@ -39,42 +72,17 @@ class TestSpider(scrapy.Spider):
               unique=True
           ),
           follow=True,
-          callback="parse_item"
+          callback="parse"
       )
   ]
 
   maxdepth = 1
 
-  def start_requests(self):
+  def start_requests(self): #starts request from urls in start_urls
         for url in self.start_urls:
             yield scrapy.Request(url, callback=self.parse, dont_filter=True)
 
-  """ def parse_item(self, response):
-        # The list of items that are found on the particular page
-        
-        # Only extract canonicalized and unique links (with respect to the current page)
-        links = LinkExtractor(canonicalize=True, unique=True).extract_links(response)
-        # Now go through all the found links
-        for link in links:
-            # Check whether the domain of the URL of the link is allowed; so whether it is in one of the allowed domains
-            is_allowed = False
-            for allowed_domain in self.allowed_domains:
-                if allowed_domain in link.url:
-                    is_allowed = True
-            # If it is allowed, create a new item and add it to the list of found items
-            if is_allowed:
-                item = DatabloggerScraperItem()
-                item['url_from'] = response.url
-                item['url_to'] = link.url
-                items.append(item)
-                linksss.append(link.url)
-        for link_to_follow in items:
-            yield scrapy.request(link_to_follow['url_from'], callback=self.parse)
-                
-        # Return all the found items
-        #return items """
-
-  def parse(self, response):
+  def parse(self, response): #function to get all the information from the urls
       # Set default meta information for first page
       from_url = ''
       from_text = ''
@@ -112,20 +120,29 @@ class TestSpider(scrapy.Spider):
                 comment=comments[0].split(' ')[0]
                 if vot[0] == "Vote":
                         vot[0]="0"
-                dict={
-                "URL":response.url,
-                "Titles":titles, 
-                "Texts": text[0],
-                "Comments":comment,
-                "Votes": vot[0],
-                "Dates": date[0]
-                }
-                storage=Storage()
-                storage.put_object(bucket, response.url, dict)
-      # Update the print logic to show what page contain a link to the
-      # current page, and what was the text of the link
-      #print(depth, response.url, '<-', from_url, from_text, sep=' ')
-      # Browse a tags only if maximum depth has not be reached
+                realvot=vot[0]
+                
+                if realvot[-1] == "k":
+                        a=realvot.replace('k', '')
+                        realcom = float(a) * 1000
+                        votes.append(realcom)
+                else:
+                    votes.append(realvot)
+
+                if comment[-1] == "k":
+                        a=comment.replace('k', '')
+                        realcom = float(a) * 1000
+                        commentarios.append(realcom)
+                else:
+                    commentarios.append(comment)
+
+                date=get_past_date(date[0])
+                
+                linksss.append(response.url)
+                texts.append(' '.join(text))
+                filenames.append(titles)
+                dates.append(date)
+  
       if depth < self.maxdepth:
           a_selectors = response.xpath("//a")
           for selector in a_selectors:
@@ -145,52 +162,33 @@ class TestSpider(scrapy.Spider):
               """ storage.put_object(bucket,link,text) """
 
               yield request
-      
-  """ def parse(self, response):
-    # Do something useful/meaningful.
-    self.logger.info("Following %s", response.url) 
-    page = response.url.split("/")[-2]
-    filename = f'{page}.html'
-    #with open(filename, 'wb') as f:
-    #   f.write(response.body)
-    storage = Storage()
-    print(filename)
-    storage.put_object(bucket,filename,getText(response.body)) """
 
-#process = CrawlerProcess()
-#web=['https://www.reddit.com/r/COVID19/','https://www.reddit.com/r/COVID19positive/','https://www.reddit.com/r/Coronavirus/']  
-
-
- 
-
-def getWebsHtml():
+def getWebsHtml(data):
     #TestSpider.start_urls=['https://www.reddit.com/r/COVID19/']     #Example
     process = CrawlerProcess()
     process.crawl(TestSpider)
     process.start() # the script will block here until the crawling is finished """
     storage=Storage()
-    list=storage.list_keys(bucket)
-    
-
-    """ for a in list:
-        num=[]
-        name=a.split('.')[0]
-        if name != 'lithops' and name != 'dataWEB':
-          filenames.append(a)
-          text=storage.get_object(bucket,a)
-          texts.append(str(text))
-          texto=str(text).split()
-          i=0
-          for b in words:
-              y=0
-              num.append(y)
-              for c in texto:
-                  if b == c:
-                    y=y+1
-                    num[i]=y
-              i=i+1
-          names.append(num) """
-    
+    i=0
+    for a in texts:
+        texto=a.split()
+        cov.append(0)
+        vir.append(0)
+        pos.append(0)
+        vac.append(0)
+        hos.append(0)
+        for b in texto:
+            if b in covid:
+                cov[i]=cov[i]+1 
+            if b in virus:
+                vir[i]=vir[i]+1 
+            if b in positiu:
+                pos[i]=pos[i]+1
+            if b in vacuna:
+                vac[i]=vac[i]+1 
+            if b in hospital:
+                hos[i]=hos[i]+1                  
+        i=i+1
       
     dict={
         "URL":linksss,
@@ -198,21 +196,29 @@ def getWebsHtml():
         "Texts": texts,
         "Comments":commentarios,
         "Votes": votes,
-        "Dates": dates
+        "Dates": dates,
+        "Covid": cov,
+        "Positive": pos,
+        "Virus": vir,
+        "Hospital": hos,
+        "Vacuna": vac
         }
-    #print(dict)
-    #print('\n\n\n\n\n')
-    #list=storage.list_keys(bucket)
-    #storage.delete_objects('cloudbuttonhackathon',list)
 
-    #storage.put_object(bucket,"dataWEB.json",json.dumps(dict))
-    inf = pd.DataFrame.from_dict(list)
-    inf.to_csv("hola.csv", index=False)
-    #storage.put_object(bucket, "data.csv", inf.to_csv(index=False))
-
-    #pdOBJ = pd.read_json(storage.get_object(bucket, "dataWEB.json"), orient='index')
-    #pdOBJ.to_csv('data.csv', index=False)
- 
+    inf = pd.DataFrame.from_dict(dict)
+    inf.to_csv("data.csv", index=False)
+    csv = pd.read_csv(r'data.csv')
+    fig, axes = plt.subplots(1, 3)
+    avg = csv.loc[:, ['Covid', 'Positive', 'Virus', 'Hospital', 'Vacuna']]
+    seaborn.scatterplot(ax=axes[0], x="Dates", y="Comments", data=csv)
+    axes[0].set_title("Comments")
+    seaborn.scatterplot(ax=axes[1], x="Dates", y="Votes", data=csv)
+    axes[1].set_title("Votes")
+    avg.mean().plot(kind='bar', ax=axes[2], x=0, y=1)
+    #axes[2].st_title("Average words")
+    #seaborn.scatterplot(data=avg.mean())
+    #axes[0].set_title("Covid")
+    plt.show()
+    storage.put_object(bucket, "data.csv", inf.to_csv(index=False))
 
 
 
