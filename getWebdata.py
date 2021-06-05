@@ -1,6 +1,5 @@
 import scrapy
 import pandas as pd
-import seaborn
 import matplotlib.pyplot as plt
 import datetime
 from scrapy.crawler import CrawlerProcess
@@ -8,14 +7,9 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from lithops import Storage
 from dateutil.relativedelta import relativedelta
+from dataAnalysis import feelings
 
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
-covid= ['Covid', 'covid19', 'Coronavirus', 'COVID-19', 'COVID']
-virus = ['virus']
-vacuna = ['vaccine', 'Vaccine', 'astrazeneca', 'AstraZeneca']
-positiu = ['positive', 'Positive']
-hospital = ['Hospital', 'hospital']
-words = [covid, virus, vacuna, positiu, hospital] #list of related word about covid
 names=[] #names 
 linksss=[] #url 
 filenames=[] #titles
@@ -23,13 +17,8 @@ commentarios=[] #comments
 votes=[] #votes
 dates=[] #dates
 texts=[] #texts
-cov=[]
-vir=[]
-pos=[]
-vac=[]
-hos=[]
 
-def get_past_date(str_days_ago): #function to get the dates from strings like 1 hour ago
+def get_past_date(str_days_ago): #function to transform "1 hour/month/year" to formal date
     TODAY = datetime.date.today()
     splitted = str_days_ago.split()
     if len(splitted) == 1 and splitted[0].lower() == 'today':
@@ -95,16 +84,19 @@ class TestSpider(scrapy.Spider): #main class scrppy
       if 'depth' in response.meta:
           depth = response.meta['depth']
       
-      
+      #get comment section
       aux=response.url.split('/')
       tema=''
       covid=False
+      #prove that the comment section talks about Covid
       for i in aux:
             if i == 'COVID19' or i == 'COVID19positive' or i == 'Coronavirus':
                 covid=True
             if i == 'comments' and covid == True:
                 tema = 'comments'
+      #if the link is a comment section
       if tema == 'comments':
+            #get all the information from the links
             auxx=False
             titulo = response.css('._eYtD2XCVieq6emjKBH3m::text').extract()
             titles = titulo[0]
@@ -143,7 +135,7 @@ class TestSpider(scrapy.Spider): #main class scrppy
                 filenames.append(titles)
                 dates.append(date)
   
-      if depth < self.maxdepth:
+      if depth < self.maxdepth: #go to the next link
           a_selectors = response.xpath("//a")
           for selector in a_selectors:
               
@@ -158,68 +150,31 @@ class TestSpider(scrapy.Spider): #main class scrppy
               
               # Meta information: depth of the link
               request.meta['depth'] = depth + 1
-              
-              """ storage.put_object(bucket,link,text) """
 
               yield request
 
-def getWebsHtml(data):
-    #TestSpider.start_urls=['https://www.reddit.com/r/COVID19/']     #Example
+if __name__ == '__main__':
+    #crawling process
     process = CrawlerProcess()
     process.crawl(TestSpider)
     process.start() # the script will block here until the crawling is finished """
     storage=Storage()
-    i=0
-    for a in texts:
-        texto=a.split()
-        cov.append(0)
-        vir.append(0)
-        pos.append(0)
-        vac.append(0)
-        hos.append(0)
-        for b in texto:
-            if b in covid:
-                cov[i]=cov[i]+1 
-            if b in virus:
-                vir[i]=vir[i]+1 
-            if b in positiu:
-                pos[i]=pos[i]+1
-            if b in vacuna:
-                vac[i]=vac[i]+1 
-            if b in hospital:
-                hos[i]=hos[i]+1                  
-        i=i+1
       
     dict={
         "URL":linksss,
         "Titles":filenames, 
-        "Texts": texts,
+        "Text": texts,
         "Comments":commentarios,
         "Votes": votes,
-        "Dates": dates,
-        "Covid": cov,
-        "Positive": pos,
-        "Virus": vir,
-        "Hospital": hos,
-        "Vacuna": vac
+        "Dates": dates
         }
 
-    inf = pd.DataFrame.from_dict(dict)
-    inf.to_csv("data.csv", index=False)
-    csv = pd.read_csv(r'data.csv')
-    fig, axes = plt.subplots(1, 3)
-    avg = csv.loc[:, ['Covid', 'Positive', 'Virus', 'Hospital', 'Vacuna']]
-    seaborn.scatterplot(ax=axes[0], x="Dates", y="Comments", data=csv)
-    axes[0].set_title("Comments")
-    seaborn.scatterplot(ax=axes[1], x="Dates", y="Votes", data=csv)
-    axes[1].set_title("Votes")
-    avg.mean().plot(kind='bar', ax=axes[2], x=0, y=1)
-    #axes[2].st_title("Average words")
-    #seaborn.scatterplot(data=avg.mean())
-    #axes[0].set_title("Covid")
-    plt.show()
-    storage.put_object(bucket, "data.csv", inf.to_csv(index=False))
-
+    #store csv into the cloud
+    inf = pd.DataFrame(dict, columns=['URL', 'Titles', 'Text', 'Comments', 'Votes', 'Dates'])
+    storage.put_object(bucket, "web.csv", inf.to_csv(index=False))
+    inf.to_csv("web.csv", index=False)
+    
+    
 
 
       
