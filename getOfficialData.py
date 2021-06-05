@@ -9,7 +9,7 @@ from io import BytesIO
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
 
 
-
+#Search all tweets according to the HASHTAG
 def dataSearch(hashtag,number_of_tweets):                       #keys: String of the file with keys
     #Reading the keys for connection                #Hashtag: hashtag we want to search and save tweets without #
     storage = Storage()
@@ -50,8 +50,8 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended").items(number_of_tweets):
         tweets.append(i.full_text)
         likes.append(i.favorite_count)
-        time.append(str(i.created_at))
-
+        allTime = str(i.created_at).split()
+        time.append(allTime[0])
         aux = ""
         for j in i.entities["hashtags"]:
             aux = aux + j["text"] + ","
@@ -72,6 +72,8 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
         "Verified":verified,
     }
     inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Text', 'Hashtags', 'Verified'])    
+    
+    #If the file exists, we add the information at the end
     nofile=1
     for i in storage.list_keys(bucket):
         if i == "tweets.csv":
@@ -79,33 +81,16 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
     if(nofile == 0):
         data=storage.get_object(bucket,"tweets.csv")
         df = pd.read_csv(BytesIO(data))
-        print(inf)
         result= df.append([inf])
-        print(result)
         storage.put_object(bucket, "tweets.csv",result.to_csv(index=False))
-        
+    
+    #If the file doesn't exist, we create it
     else:
         storage.put_object(bucket, "tweets.csv", inf.to_csv(index=False))
-    
-
-
-
-
-
-
-    #storage.put_object(bucket,"dataTwitter.json",json.dumps(dict))
-    #storage.put_object(bucket,"text.txt",str(tweets)
-
-#with Pool() as pool:
-    #result=pool.starmap(dataSearch,[("Covid19",10)],["Messi",10])
 
 def main():
-    #dataSearch("Astrazeneca",2)
     with Pool() as pool:
-        result=pool.starmap(dataSearch,[("Covid19",10),("Messi",10)])
-    storage=Storage()
-    data=storage.get_object(bucket,"tweets.csv")
-    df = pd.read_csv(BytesIO(data))  
-    print(df)  
+        result=pool.starmap(dataSearch,[("Covid19",96), ("SARS-CoV-2",96),("CovidVaccine",96)])
+    
 if __name__ == '__main__':
     main()
