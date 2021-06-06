@@ -1,6 +1,5 @@
 from nltk.util import pr
 import pandas as pd
-#df= pd.DataFrame({'tweets':tweets,'time':time,'likes':likes})
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from lithops import Storage
 from io import BytesIO
@@ -9,10 +8,14 @@ import matplotlib.pyplot as plt
 from googletrans import Translator
 import seaborn
 import nltk
+import datetime
 from lithops.multiprocessing import Pool
-
+from operator import itemgetter
+from heapq import nlargest
 
 bucket='cloudbuttonhackathon'
+
+#Take the N most common words
 def mostCommonWords(df,n):
     splitText = []
     for text in df["Text"]:
@@ -20,10 +23,9 @@ def mostCommonWords(df,n):
             splitText.append(word)
         m = Counter(splitText).most_common(n)
         print(m)
-    #wDf= pd.DataFrame(m)
-    #wDf.set_index(0)[1].plot(kind="pie",subplots=True)
     return m
 
+#Sentiment analysis
 def feelings(df,n):
     nltk.download('vader_lexicon')
     translator = Translator()
@@ -31,7 +33,11 @@ def feelings(df,n):
     pos, neg, neu = 0, 0, 0
     positive, neutral, negative = [], [], []
     for text in (df["Text"]):
-        text=translator.translate(text,dest="en").text
+        aux=text
+        try:
+            text=translator.translate(text,dest="en").text
+        except:
+            text=aux
         vs = analyzer.polarity_scores(str(text))
     #polary = analyzer.polarity_scores()
         if vs['compound'] >= 0.4:
@@ -50,7 +56,7 @@ def feelings(df,n):
 
     return dict
     
-
+#Take the N most common hashtags
 def mostCommonHashtags(df,n):
     splitHash=[]
     for i in df["Hashtags"]:
@@ -59,10 +65,8 @@ def mostCommonHashtags(df,n):
                 splitHash.append(word.upper())
         m = Counter(splitHash).most_common(n)
     return m
-
-def mostRetweeted(df,n):
-    return max(df["Retweets"])
     
+#Counts how many tweets are made by veridied/not verified accounts
 def verifiedTweet(df,n):
     yes = 0
     no = 0
@@ -75,43 +79,79 @@ def verifiedTweet(df,n):
     dict=[yes,no]
     return dict
 
+#Take the 5 most retweeted tweets according to the day passed by parameter
+def mostRetweetedInADay(df,date):
+    url = df[df['Date']==date]['Url']
+
+    result = nlargest(5, enumerate(df[df['Date']==date]['Retweets']), itemgetter(1))
+    urlList = []
+    rt = []
+    for value in result:
+        urlList.append(url[value[0]])
+        rt.append(value[1])
+
+    dict = [urlList, rt]
+
+    return dict
+
+
 def main():
 
     storage=Storage()
     data=storage.get_object(bucket,"tweets.csv")
     df = pd.read_csv(BytesIO(data))
-    fig, axs = plt.subplots(1, 5)
-    
+    fig, axs = plt.subplots(1, 6)  
+    TODAY = datetime.date.today()
 
     with Pool() as pool:
         mcW=pool.starmap(mostCommonWords,[(df,5)])
         mcH=pool.starmap(mostCommonHashtags, [(df,5)])
-        feel=pool.starmap(feelings, [(df,"")])
+        #feel=pool.starmap(feelings, [(df,"")])
         veri=pool.starmap(verifiedTweet, [(df,"")])
+        mrT = pool.starmap(mostRetweetedInADay, [(df, str(TODAY.isoformat()))])
 
-    seaborn.scatterplot(x="User", y="Retweets", data=df, ax=axs[0])
+    #Url/Retweets plot
+    seaborn.scatterplot(x="Url", y="Retweets", data=df, ax=axs[0])
+    
+    #MostCommonWord plot
     pdmcW = pd.DataFrame(mcW[0])
     seaborn.barplot(x=0, y=1, data=pdmcW, ax=axs[1])
+
+    #MostCommonHashtag plot
     pdmcH = pd.DataFrame(mcH[0])
     seaborn.barplot(x=0, y=1, data=pdmcH, ax=axs[2])
 
+    #SentimentAnalysis plot
+    feel = feelings(df, "")
+    #pdfeel = pd.DataFrame(feel)
     aux={
-        "Positives":feel[0][0],
-        "Neutrals":feel[0][1],
-        "Negatives":feel[0][2],        
+        "Positives":feel[0],
+        "Neutrals":feel[1],
+        "Negatives":feel[2],        
     }
     feel=pd.DataFrame(aux.items())
     seaborn.barplot(x=0, y=1, data=feel, ax=axs[3])
     
+    #Verified plot
     aux={
          "Verified":veri[0][0],
          "NotVerified":veri[0][1]
     }
     pdverified=pd.DataFrame(aux.items())
     seaborn.barplot(x=0, y=1, data=pdverified, ax=axs[4])
+    
+    #mostRetweetedInADay plot
+    mostRT={
+         mrT[0][0][0]:mrT[0][1][0],
+         mrT[0][0][1]:mrT[0][1][1],
+         mrT[0][0][2]:mrT[0][1][2],
+         mrT[0][0][3]:mrT[0][1][3],
+         mrT[0][0][4]:mrT[0][1][4]
+    }
+
+    mostRTdf=pd.DataFrame(mostRT.items())
+    seaborn.barplot(x=0, y=1, data=mostRTdf, ax=axs[5])
     plt.show()
 
-    print('hola')
-    
 if __name__ == '__main__':
     main()

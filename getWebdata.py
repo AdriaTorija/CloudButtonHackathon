@@ -171,8 +171,7 @@ if __name__ == '__main__':
 
     #store csv into the cloud
     inf = pd.DataFrame(dict, columns=['URL', 'Titles', 'Text', 'Comments', 'Votes', 'Dates'])
-    storage.put_object(bucket, "web.csv", inf.to_csv(index=False))
-    inf.to_csv("web.csv", index=False)
+    storage.put_object(bucket, "webs.csv", inf.to_csv(index=False))
     
     
 

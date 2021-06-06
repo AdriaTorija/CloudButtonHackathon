@@ -5,7 +5,6 @@ import statistics
 import nltk
 from lithops import Storage
 from lithops.multiprocessing import Pool
-#from dataAnalysis import feelings
 from io import BytesIO
 from nltk.util import pr
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -81,7 +80,7 @@ def Analysis():
     bucket='cloudbuttonhackathon'
     
 
-    data=storage.get_object(bucket, "web.csv")
+    data=storage.get_object(bucket, "webs.csv")
     csv = pd.read_csv(BytesIO(data))
     with Pool() as pool:
         list=pool.starmap(WordCounting,[(csv,"")])
