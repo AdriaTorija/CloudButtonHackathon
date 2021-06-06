@@ -90,7 +90,7 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
 
 def main():
     with Pool() as pool:
-        result=pool.starmap(dataSearch,[("Covid19",96), ("SARS-CoV-2",96),("CovidVaccine",96)])
+        result=pool.starmap(dataSearch,[("Covid19",80), ("SARS-CoV-2",80),("CovidVaccine",80)])
     
 if __name__ == '__main__':
     main()
