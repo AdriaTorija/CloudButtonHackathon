@@ -5,6 +5,8 @@ import pandas as pd
 from lithops import Storage
 from lithops.multiprocessing import Pool
 from io import BytesIO
+import json
+from datetime import datetime
 
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
 
@@ -31,66 +33,25 @@ def dataSearch(hashtag,number_of_tweets):                       #keys: String of
 
 
     #information we want to substract:
-    dict = {}
     tweets = []
-    likes = []
-    time = []
-    hashtags = []
-    urls = []
-    names = []
-    totalVerifiedUsers = 0
-    verified = []
-    geo = []
-    retweets = []
+
     #Substraction of information
     lang= " lang:es OR lang:en"
 
     stringSearch="#"+hashtag + lang 
     print("Searching: "+stringSearch)
     for i in tweepy.Cursor(api.search,q=stringSearch,tweet_mode="extended").items(number_of_tweets):
-        tweets.append(i.full_text)
-        likes.append(i.favorite_count)
-        allTime = str(i.created_at).split()
-        time.append(allTime[0])
-        aux = ""
-        for j in i.entities["hashtags"]:
-            aux = aux + j["text"] + ","
-        hashtags.append(aux)
-        urls.append(f"https://twitter.com/user/status/{i.id}")
-        geo.append(i.geo)
-        names.append(i.user.screen_name)
-        verified.append(i.user.verified)
-        retweets.append(i.retweet_count)
-    dict={
-        "User":names,
-        "Likes":likes,
-        "Retweets":retweets,
-        "Date":time,
-        "Url":urls,
-        "Text":tweets,
-        "Hashtags":hashtags,
-        "Verified":verified,
-    }
-    inf = pd.DataFrame(dict, columns = ['User', 'Likes', 'Retweets', 'Date', 'Url', 'Text', 'Hashtags', 'Verified'])    
-    
-    #If the file exists, we add the information at the end
-    nofile=1
-    for i in storage.list_keys(bucket):
-        if i == "tweets.csv":
-            nofile=0
-    if(nofile == 0):
-        data=storage.get_object(bucket,"tweets.csv")
-        df = pd.read_csv(BytesIO(data))
-        result= df.append([inf])
-        storage.put_object(bucket, "tweets.csv",result.to_csv(index=False))
-    
-    #If the file doesn't exist, we create it
-    else:
-        storage.put_object(bucket, "tweets.csv", inf.to_csv(index=False))
+        info = i._json
+        tweets.append(json.dumps(info))
+
+    data = str(datetime.now())
+    nom = hashtag + "/" + data
+    storage.put_object(bucket, nom, '\n'.join(tweets))
 
 def main():
     with Pool() as pool:
         result=pool.starmap(dataSearch,[("Covid19",80), ("SARS-CoV-2",80),("CovidVaccine",80)])
+    #dataSearch("Covid19", 5)
     
 if __name__ == '__main__':
     main()
