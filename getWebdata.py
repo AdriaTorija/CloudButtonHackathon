@@ -2,6 +2,7 @@ import scrapy
 import pandas as pd
 import matplotlib.pyplot as plt
 import datetime
+import json
 from scrapy.crawler import CrawlerProcess
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
@@ -16,35 +17,10 @@ commentarios=[] #comments
 votes=[] #votes
 dates=[] #dates
 texts=[] #texts
-
-def get_past_date(str_days_ago): #function to transform "1 hour/month/year" to formal date
-    TODAY = datetime.date.today()
-    splitted = str_days_ago.split()
-    if len(splitted) == 1 and splitted[0].lower() == 'today':
-        return str(TODAY.isoformat())
-    elif len(splitted) == 1 and splitted[0].lower() == 'yesterday':
-        date = TODAY - relativedelta(days=1)
-        return str(date.isoformat())
-    elif splitted[1].lower() in ['hour', 'hours', 'hr', 'hrs', 'h']:
-        date = datetime.datetime.now() - relativedelta(hours=int(splitted[0]))
-        return str(date.date().isoformat())
-    elif splitted[1].lower() in ['day', 'days', 'd']:
-        date = TODAY - relativedelta(days=int(splitted[0]))
-        return str(date.isoformat())
-    elif splitted[1].lower() in ['wk', 'wks', 'week', 'weeks', 'w']:
-        date = TODAY - relativedelta(weeks=int(splitted[0]))
-        return str(date.isoformat())
-    elif splitted[1].lower() in ['mon', 'mons', 'month', 'months', 'm']:
-        date = TODAY - relativedelta(months=int(splitted[0]))
-        return str(date.isoformat())
-    elif splitted[1].lower() in ['yrs', 'yr', 'years', 'year', 'y']:
-        date = TODAY - relativedelta(years=int(splitted[0]))
-        return str(date.isoformat())
-    elif splitted[1].lower() in ['min', 'm', 'minutes', 'minute']:
-        date = TODAY - relativedelta(years=int(splitted[0]))
-        return str(TODAY.isoformat())
-    else:
-        return "Wrong Argument format"
+web1=[]
+web2=[]
+web3=[]
+webs=[]
 
 class TestSpider(scrapy.Spider): #main class scrppy
   name = "test" 
@@ -65,10 +41,13 @@ class TestSpider(scrapy.Spider): #main class scrppy
   ]
 
   maxdepth = 1
+  
 
   def start_requests(self): #starts request from urls in start_urls
+        i=0
         for url in self.start_urls:
             yield scrapy.Request(url, callback=self.parse, dont_filter=True)
+            i+=1;
 
   def parse(self, response): #function to get all the information from the urls
       # Set default meta information for first page
@@ -87,15 +66,18 @@ class TestSpider(scrapy.Spider): #main class scrppy
       aux=response.url.split('/')
       tema=''
       covid=False
+      nom=''
       #prove that the comment section talks about Covid
       for i in aux:
             if i == 'COVID19' or i == 'COVID19positive' or i == 'Coronavirus':
+                nom=i
                 covid=True
             if i == 'comments' and covid == True:
                 tema = 'comments'
       #if the link is a comment section
       if tema == 'comments':
             #get all the information from the links
+            web=[]
             auxx=False
             titulo = response.css('._eYtD2XCVieq6emjKBH3m::text').extract()
             titles = titulo[0]
@@ -108,6 +90,10 @@ class TestSpider(scrapy.Spider): #main class scrppy
                 comments = response.css('.FHCV02u6Cp2zYL0fhQPsO::text').extract()
                 text = response.css('._1qeIAgB0cPwnLhDF9XSiJM::text').extract()
 
+                web.append(response.url)
+                web.append(titles)
+                web.append(' '.join(text))
+
                 comment=comments[0].split(' ')[0]
                 if vot[0] == "Vote":
                         vot[0]="0"
@@ -115,24 +101,34 @@ class TestSpider(scrapy.Spider): #main class scrppy
                 
                 if realvot[-1] == "k":
                         a=realvot.replace('k', '')
-                        realcom = float(a) * 1000
-                        votes.append(realcom)
+                        realvot = float(a) * 1000
+                        web.append(realvot)
                 else:
-                    votes.append(realvot)
+                    web.append(realvot)
 
                 if comment[-1] == "k":
                         a=comment.replace('k', '')
-                        realcom = float(a) * 1000
-                        commentarios.append(realcom)
+                        comment = float(a) * 1000
+                        web.append(comment)
                 else:
-                    commentarios.append(comment)
+                    web.append(comment)
 
-                date=get_past_date(date[0])
+                date=date[0]
                 
-                linksss.append(response.url)
-                texts.append(' '.join(text))
-                filenames.append(titles)
-                dates.append(date)
+                web.append(date)
+                web.append(nom)
+                dict={
+                    "URL":response.url,
+                    "Titles":titles, 
+                    "Text": ' '.join(text),
+                    "Comments":comment,
+                    "Votes": realvot,
+                    "Dates": date,
+                    "Name": nom
+                    }
+
+                webs.append(dict)
+ 
   
       if depth < self.maxdepth: #go to the next link
           a_selectors = response.xpath("//a")
@@ -151,15 +147,34 @@ class TestSpider(scrapy.Spider): #main class scrppy
               request.meta['depth'] = depth + 1
 
               yield request
+            
 
 if __name__ == '__main__':
     #crawling process
     process = CrawlerProcess()
     process.crawl(TestSpider)
     process.start() # the script will block here until the crawling is finished """
-    storage=Storage()
-      
-    dict={
+    storage=Storage() 
+
+    data = str(datetime.datetime.now())
+    i=0
+    for w in webs:
+        if "COVID19" == w["Name"]:
+            web1.append(json.dumps(w))
+        if "COVID19positive" == w["Name"]:
+            web2.append(json.dumps(w))
+        if "Coronavirus" == w["Name"]:
+            web3.append(json.dumps(w))
+    
+    nom = "COVID19" + "/" + data
+    storage.put_object(bucket, nom, '\n'.join(web1))
+    nom = "COVID19positive" + "/" + data
+    storage.put_object(bucket, nom, '\n'.join(web2))
+    nom = "Coronavirus" + "/" + data
+    storage.put_object(bucket, nom, '\n'.join(web3))
+    
+
+    """ dict={
         "URL":linksss,
         "Titles":filenames, 
         "Text": texts,
@@ -170,7 +185,7 @@ if __name__ == '__main__':
 
     #store csv into the cloud
     inf = pd.DataFrame(dict, columns=['URL', 'Titles', 'Text', 'Comments', 'Votes', 'Dates'])
-    storage.put_object(bucket, "webs.csv", inf.to_csv(index=False))
+    storage.put_object(bucket, "webs.csv", inf.to_csv(index=False)) """
     
     
 
