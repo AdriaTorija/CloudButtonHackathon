@@ -7,7 +7,6 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from lithops import Storage
 from dateutil.relativedelta import relativedelta
-from twitterDataAnalysis import feelings
 
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
 names=[] #names 
