@@ -8,7 +8,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Rule
 from lithops import Storage
 from dateutil.relativedelta import relativedelta
-
+from lithops.multiprocessing import Pool
 bucket='cloudbuttonhackathon'                  #Change this value if you want to change the storage bucket
 names=[] #names 
 linksss=[] #url 
@@ -148,14 +148,12 @@ class TestSpider(scrapy.Spider): #main class scrppy
 
               yield request
             
-
-if __name__ == '__main__':
-    #crawling process
+def dataSearch(x):
     process = CrawlerProcess()
     process.crawl(TestSpider)
     process.start() # the script will block here until the crawling is finished """
     storage=Storage() 
-
+    
     data = str(datetime.datetime.now())
     i=0
     for w in webs:
@@ -172,6 +170,12 @@ if __name__ == '__main__':
     storage.put_object(bucket, nom, '\n'.join(web2))
     nom = "Coronavirus" + "/" + data
     storage.put_object(bucket, nom, '\n'.join(web3))
+
+if __name__ == '__main__':
+    with Pool() as pool:
+        result=pool.apply(dataSearch,[("",80)])
+    #crawling process
+   
     
 
     """ dict={
